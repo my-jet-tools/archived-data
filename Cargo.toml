@@ -1,0 +1,17 @@
+[package]
+name = "archived-data"
+version = "0.1.0"
+edition = "2024"
+
+# A candidate for MyJetTools: nothing from the monorepo may be depended on, and the dependency list is
+# deliberately these two — the file is generic over the key, the slot and the item, and knows nothing
+# about what they mean.
+[lib]
+name = "archived_data"
+
+[dependencies]
+tokio = { version = "*", features = ["io-util", "sync", "fs", "rt"] }
+rust-extensions = { tag = "0.1.5", git = "https://github.com/MyJetTools/rust-extensions.git" }
+
+[dev-dependencies]
+tokio = { version = "*", features = ["full"] }
