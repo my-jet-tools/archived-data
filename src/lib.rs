@@ -2,8 +2,8 @@
 //! object in S3.
 //!
 //! Generic over what is stored: nothing here knows what a key or an item means. One module per storage
-//! shape; see this crate's `README.md`. What every shape shares — the slot and item traits, the data
-//! page, the L0 chain framing, the page caches and the IO — lives at the crate root.
+//! shape; see this crate's `README.md` and the topics in `docs/`. What every shape shares — the slot and
+//! item traits, the data page, the L0 chain framing, the page caches and the IO — lives at the crate root.
 //!
 //! The split structures read and write an archive as an index and data files `0 ..= 255`, through
 //! [`ArchiveFileWriter`] and [`ArchiveFileReader`] handed out by ROLE by an [`IoWriterFactory`] and an
@@ -128,10 +128,12 @@ pub(crate) use writer_data_pages::*;
 pub(crate) use writer_page::*;
 pub(crate) use writer_page_cache::*;
 
-/// Every `rust` block of `docs/*.md` is compiled and run by `cargo test --doc`, so the docs cannot drift
-/// away from the API.
+/// Every `rust` block of `README.md` and `docs/*.md` is compiled and run by `cargo test --doc`, so the docs
+/// cannot drift away from the API.
 #[cfg(doctest)]
 mod docs {
+    #[doc = include_str!("../README.md")]
+    struct Readme;
     #[doc = include_str!("../docs/io.md")]
     struct Io;
     #[doc = include_str!("../docs/split-format.md")]

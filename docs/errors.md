@@ -12,7 +12,7 @@ The `String` is a message for a person to read. Code should match on the variant
 
 ## Io: the IO failed
 
-- **Split structures**: both preallocated modules and the minute-indexed records, through the traits of [io](io.md).
+- **Split structures**: both preallocated modules and the records module, `fixed_key_minute_indexed_records`, through the traits of [io](io.md).
   - An `io::Error` from an `ArchiveFileWriter`, `ArchiveFileReader`, `IoWriterFactory` or `IoReaderFactory` call is kept whole, with its kind and message. The messages of `LocalFileIo` name the file and what it was doing.
   - A file the factory cannot create or open is `Io` too. Over `LocalFileIo`, `open` with no index is `Io` of kind `NotFound`, and so is a `get` whose `data_ref` names a data file that does not exist.
   - A reader does not remember a data file that failed to open. The next read tries to open it again.
@@ -113,7 +113,7 @@ async fn main() {
   - an L1 page whose keys do not ascend or do not span its interval;
   - a frame that reaches past the end of its file;
   - a data page of other sizes;
-  - in the minute-indexed records ([fixed-key-minute-indexed-records](fixed-key-minute-indexed-records.md)): a read that meets a record outside the day the reader was given, records out of time order, a cell that does not point at the first record of its minute, or a chain that returns to a frame it walked. A WORKING index of this module can end with L2 frames, which `open` does not read: one cut inside a trailing L2 frame opens, and answers `Corrupted` at the first read of that key.
+  - in the records module ([fixed-key-minute-indexed-records](fixed-key-minute-indexed-records.md)): a read that meets a record outside the day the reader was given, records out of time order, a cell that does not point at the first record of its minute, or a chain that returns to a frame it walked. A WORKING index of this module can end with L2 frames, which `open` does not read: one cut inside a trailing L2 frame opens, and answers `Corrupted` at the first read of that key.
 - **SingleFile**: a broken or cut L0 chain, intervals out of order, an L1 page that starts past the end of the file, or an L1 page or a data page of other sizes ([single-file](single-file.md)).
 - **Global day index**: a file shorter than its sync time plus an L0 header (28 bytes), a header that fails its hash, a damaged L1 page or year block, or fewer than 8 bytes handed to `GlobalDayIndex::sync_time_of` ([global-day-index](global-day-index.md)).
 - **Compaction**:
@@ -143,7 +143,7 @@ async fn main() {
 - **`write_compacted_to` was handed a plan of other sizes.** Only a size the plan carries is seen this way:
   - a plan whose data pages have another length (other slot or item types): refused at the first key, before any file is created;
   - a plan whose L0 frame has another length, which is a plan of the other preallocated module (fixed keys handed to a variable-key reader, or the reverse): refused after the data files are written and before the index is created;
-  - in the minute-indexed records, a plan of keys of another `LEN`: refused before any file is created.
+  - in the records module, a plan of keys of another `LEN`: refused before any file is created.
   - Every other mismatch is `Corrupted`, "the source changed while it was being compacted". That covers a plan of fixed keys of another `LEN`, a plan of another archive, and any plan with another number of keys. This check can come before the ones above.
 - **A writer that a failure left unusable** returns "an earlier write or flush failed or was dropped before it completed: the writer is not usable" for every later `write`, `flush` and `finish`. The two preallocated writers still answer a bad slot, item or variable key first (see the order of checks below).
 - A writer's `ContractViolation` is a refusal only when it is in the [refusal list](#refusals-nothing-changed-the-writer-stays-usable). Any other `ContractViolation` from a writer is a failure.
@@ -444,12 +444,12 @@ async fn main() {
 
 **Compaction**, `write_compacted_to`:
 
-- An `Err` in the data pass creates no index: the index is created only once every data file is finished. An output that was empty then has no index, and `open` fails with `Io`.
-- An index that an earlier run left in the same output is not removed by a failed data pass. It still opens, over data files the failed run may have partly replaced. So compact into an empty output.
+- An `Err` in the data pass creates no index: the index is created only once every data file is finished. A place that was empty then has no index, and `open` fails with `Io`.
+- An index that an earlier run left in the same place is not removed by a failed data pass. It still opens, over data files the failed run may have partly replaced. So compact into an empty place, and never into the place the reader itself reads.
 - An `Err` in the index pass can leave a short index, which `open` refuses as `Corrupted`.
 - Run it again: it replaces every file it creates. A compact archive is complete only when its index opens ([compaction](lifecycle.md#compaction-the-data-files-first-the-index-last)).
 
-**Readers**: an `Err` changes nothing. The reader stays usable, and the call can be tried again. A dropped call is harmless too, with one exception: a SingleFile reader over a source that keeps a read in flight. A `get`, `keys_count` or `write_compacted_to` dropped in the middle of a read leaves that shared source mid-request, and the next caller's seek fails. `tokio::fs::File` is not such a source ([reading](single-file.md#reading)).
+**Readers**: an `Err` changes nothing. The reader stays usable, and the call can be tried again. A dropped call is harmless too, with one exception: a SingleFile reader over a source that keeps a read in flight. A `get`, `keys_count`, `compacted_len` or `write_compacted_to` dropped in the middle of a read leaves that shared source mid-request, and the next caller's seek fails. `tokio::fs::File` is not such a source ([reading](single-file.md#reading)).
 
 ### Panics
 

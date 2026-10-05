@@ -441,6 +441,14 @@ So a reader told the wrong day answers `Corrupted` for a `get_range` or `get_day
 empty list for one that meets none, exactly as it would on the right day. `minutes_with_records`, `keys` and
 `keys_count` read no record, so they answer the same whatever day the reader was told.
 
+That holds for a `day_start` that differs from the writer's by a minute or more, as another day always does:
+the first record a read meets is then outside the minute of its cell, or outside the day. A `get_range` that
+meets none can still be one whose range holds records: its walk starts at the minute its own `day_start`
+gives. A `day_start` off by LESS than a minute is not always caught. The reader's minutes no longer line up
+with the cells: some reads answer `Corrupted`, and a `get_range` can leave out records of its range with no
+error. Nothing checks that `day_start` is a whole minute, a midnight, or the writer's: give the reader exactly
+the value the writer was given.
+
 **Caches.** L1 pages, L2 frames and data frames are cached like the split readers' pages:
 `DEFAULT_READER_L1_CACHE_PAGES`, `DEFAULT_READER_L2_CACHE_FRAMES` and `DEFAULT_READER_DATA_CACHE_PAGES`, 10
 each, bounded by count, each under its own `RwLock`. A shrink evicts down to the new size before it returns; 0

@@ -54,7 +54,7 @@
 //!
 //! Its working file is built by [`VariableKeyPreallocatedSlotsArchiveWriterSingleFile`] and its compact
 //! file by [`VariableKeyPreallocatedSlotsArchiveReaderSingleFile::write_compacted_to`]. The pictures of
-//! both formats are in this module's `README.md`.
+//! both formats are in `docs/variable-key-preallocated-slots.md` and `docs/single-file.md`.
 
 mod entry_walk;
 mod key_prefix;

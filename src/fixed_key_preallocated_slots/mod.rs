@@ -49,7 +49,7 @@
 //!
 //! Its working file is built by [`FixedKeyPreallocatedSlotsArchiveWriterSingleFile`] and its compact file
 //! by [`FixedKeyPreallocatedSlotsArchiveReaderSingleFile::write_compacted_to`]. The pictures of both
-//! formats are in this module's `README.md`.
+//! formats are in `docs/fixed-key-preallocated-slots.md` and `docs/single-file.md`.
 
 mod layout;
 mod primary_key;

@@ -60,7 +60,7 @@ bits 366 and 367           byte 45   0x40, 0x80, always 0
 - A year is a `u16`: 0 to 65 535.
 - The day of a moment is `unix_microseconds` floored to a multiple of 86 400 000 000, so it is a whole day of the `i64` timeline, which is UTC for `DateTimeAsMicroseconds`. The calendar is the proleptic Gregorian one, computed by the crate in [calendar.rs](../src/calendar.rs) rather than by `chrono`.
 - The archiver marks a day archive with `set_day(login, day_start)`, which sets the day that `day_start` falls in. When `day_start` is a midnight, `days_with_data` gives back exactly that `day_start`.
-- The minute-indexed writer does not check that its `day_start` is a midnight. An archive that starts at 21:00 covers two days of this calendar, and `set_day(login, day_start)` sets only the first: a read over the second day alone does not find the archive.
+- The records writer, `FixedKeyMinuteIndexedRecordsArchiveWriter`, does not check that its `day_start` is a midnight. An archive that starts at 21:00 covers two days of this calendar, and `set_day(login, day_start)` sets only the first: a read over the second day alone does not find the archive.
 
 ## GlobalDayIndex — a version in memory
 

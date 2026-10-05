@@ -13,8 +13,8 @@
 //! ```
 //!
 //! The format is specified in the Task manager document `architecture/archived-data-history-records.md` of
-//! project RMS; the decisions it left open, and what the archiver owns — the temporary name, the rename, the
-//! upload — are in this crate's `README.md`.
+//! project RMS; the decisions it left open are in `docs/global-day-index.md`, and what the archiver owns — the
+//! temporary name, the rename, the upload — in `docs/archiving-a-day.md`.
 
 mod bytes_file_reader;
 mod index;

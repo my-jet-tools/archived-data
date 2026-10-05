@@ -1,6 +1,6 @@
 # archiving-a-day
 
-The archiver's recipe for one day of an MT server (RMS-847). The day's rows become a compact [minute-indexed archive](fixed-key-minute-indexed-records.md) in S3, and the server's [global day index](global-day-index.md) gets the day's bits. The crate owns the FORMAT. Everything that makes a version durable and shared is the archiver's: the empty directory, the temporary name, `fsync` and rename, the uploads, the verification, the `Uploaded` flag. It must be done exactly in the order below. Types: `FixedKeyMinuteIndexedRecordsArchiveWriter` and `FixedKeyMinuteIndexedRecordsArchiveReader` over `LocalFileIo`, `MinuteIndexedRecordsCompactionPlan`, `GlobalDayIndex`, `GlobalDayIndexReader`.
+The archiver's recipe for one day of an MT server (RMS-847). The day's rows become a compact [records archive](fixed-key-minute-indexed-records.md) in S3, and the server's [global day index](global-day-index.md) gets the day's bits. The crate owns the FORMAT. Everything that makes a version durable and shared is the archiver's: the empty directory, the temporary name, `fsync` and rename, the uploads, the verification, the `Uploaded` flag. It must be done exactly in the order below. Types: `FixedKeyMinuteIndexedRecordsArchiveWriter` and `FixedKeyMinuteIndexedRecordsArchiveReader` over `LocalFileIo`, `MinuteIndexedRecordsCompactionPlan`, `GlobalDayIndex`, `GlobalDayIndexReader`.
 
 ## The order
 
@@ -244,9 +244,9 @@ No other difference in the write order shows in the compact bytes: neither the o
 
 Hand the rows to the writer grouped by account and, inside an account, in time order: the order of `ORDER BY login, time`, with the tie-breaker above. Never interleave accounts. Only the order of the `write` calls matters to the writer. Whether Postgres sorts the rows or the archiver groups them in memory is the archiver's choice (§4 of the specification records why the MT4 archiver does the second).
 
-The writer keeps `DEFAULT_WRITER_L2_CACHE_FRAMES` = 1 024 L2 frames of 12 968 bytes (about 13 MiB) and `DEFAULT_WRITER_DATA_CACHE_PAGES` = 1 024 data frames of 32 KiB (32 MiB) ([the writer's caches](fixed-key-minute-indexed-records.md#the-writers-caches)), and a day holds 3 000 to 50 000 accounts.
+The writer keeps `DEFAULT_WRITER_L2_CACHE_FRAMES` = 1024 L2 frames of 12 968 bytes (about 13 MiB) and `DEFAULT_WRITER_DATA_CACHE_PAGES` = 1024 data frames of 32 KiB (32 MiB) ([the writer's caches](fixed-key-minute-indexed-records.md#the-writers-caches)), and a day holds 3 000 to 50 000 accounts.
 
-- Rows in time order across accounts evict an L2 frame and a data frame, and read them back, for nearly every record once more than 1 024 accounts are in play. With 3 000 accounts of 4 records each, the writer read 18 000 frames back for the 9 000 records after each account's first, and none when the same rows came grouped by account.
+- Rows in time order across accounts evict an L2 frame and a data frame, and read them back, for nearly every record once more than 1024 accounts are in play. With 3 000 accounts of 4 records each, the writer read 18 000 frames back for the 9 000 records after each account's first, and none when the same rows came grouped by account.
 - Rows grouped by account keep one account's frames hot. Each record is no earlier than the ones before it, so it goes at the end of its chain: into the last frame, or into a new frame chained after it, and no frame is ever halved.
 - Rows that cannot be grouped need caches that hold the whole day: the writer's `set_l2_cache_size` and `set_data_cache_size`. With both set to 3 000, the same rows in time order read nothing back. That costs 12 968 bytes and at least one 32 KiB data frame for every account.
 

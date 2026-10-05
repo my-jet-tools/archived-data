@@ -31,7 +31,7 @@
 //!   pages. The data files are written first and the index LAST.
 //!
 //! The byte layout is specified in the Task manager document `architecture/archived-data-history-records.md`
-//! of project RMS; the decisions it left open are in this crate's `README.md`.
+//! of project RMS; the decisions it left open are in `docs/fixed-key-minute-indexed-records.md`.
 
 mod compact_records_data_files;
 mod compact_records_index;
